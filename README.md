@@ -1,5 +1,9 @@
 # kube-cluster
 
+This is minimal fork of example provided by:
+
+https://github.com/terraform-providers/terraform-provider-aws
+
 Edit terraform.tfvars
 
 > aws_access_key = ""
@@ -9,9 +13,13 @@ Edit terraform.tfvars
 
 # Deploy Cluster
 
-> sudo terraform apply
-
+> cd examples/examples/eks-getting-started <
+> sudo terraform apply<
 > terraform output kubeconfig > ~/.kube/config
+  terraform output config_map_aws_auth > config_map.yaml
+  kubectl apply -f config_map.yaml
+
+> kubectl get pvc
 
 > kubectl get svc
 
@@ -21,6 +29,7 @@ Edit terraform.tfvars
 
 Deploy services in kustomization.yml
 
+> cd services
 > kubectl apply -k ./
 
 > kubectl get pods

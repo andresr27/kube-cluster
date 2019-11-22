@@ -1,4 +1,4 @@
-# kube-cluster
+# Kuberentes Cluster Example
 
 This is minimal fork of example provided by:
 
@@ -13,17 +13,21 @@ Edit terraform.tfvars
 
 # Deploy Cluster
 
-> cd examples/examples/eks-getting-started <
-> sudo terraform apply<
+> cd examples/examples/eks-getting-started
+
+> sudo terraform apply
+
 > terraform output kubeconfig > ~/.kube/config
-  terraform output config_map_aws_auth > config_map.yaml
-  kubectl apply -f config_map.yaml
+
+> terraform output config_map_aws_auth > config_map.yaml
+
+> kubectl apply -f config_map.yaml
 
 > kubectl get pvc
 
 > kubectl get svc
 
-> sudo terraform destroy
+
 
 # Deploy Services
 
@@ -35,3 +39,7 @@ Deploy services in kustomization.yml
 > kubectl get pods
 
 You need to have aws-authenticator configured.
+
+# Detroy Cluster
+
+> sudo terraform destroy

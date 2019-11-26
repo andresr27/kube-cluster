@@ -2,3 +2,4 @@ terraform.tfvars
 ./terraform/*
 .terraform/*
 examples/eks-getting-started/.terraform/*
+deployments/eks-cluster/.terraform/*

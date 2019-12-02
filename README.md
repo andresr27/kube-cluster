@@ -34,6 +34,9 @@ Edit terraform.tfvars
 Deploy services in kustomization.yml
 
 > cd services
+
+Create a txt file named password in this directory with no end of line to use in secret generation.
+
 > kubectl apply -k ./
 
 > kubectl get pods

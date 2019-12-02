@@ -74,10 +74,6 @@ resource "aws_security_group_rule" "demo-cluster-ingress-workstation-http" {
 
 resource "aws_eks_cluster" "demo" {
   name     = var.cluster-name
-  # instance_type = "t2.micro"
-  # tags = {
-  #   Name = "Master"
-  # }
   role_arn = aws_iam_role.demo-cluster.arn
 
   vpc_config {

@@ -4,3 +4,5 @@ services/password.txt
 .terraform/*
 examples/eks-getting-started/.terraform/*
 terraform/eks-cluster/.terraform/*
+terraform/eks-cluster/terraform.*
+aws/*

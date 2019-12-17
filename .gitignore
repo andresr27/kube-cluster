@@ -4,4 +4,4 @@ services/password.txt
 .terraform/*
 terraform/eks-cluster/.terraform/*
 terraform/eks-cluster/terraform.*
-.aws/*
+aws/*

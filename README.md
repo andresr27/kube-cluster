@@ -1,4 +1,4 @@
-# Kuberentes Cluster Example
+# Kubernetes Cluster Example
 
 This is minimal fork of example provided by:
 

@@ -1,7 +1,5 @@
 terraform.tfvars
 services/password.txt
-./terraform/*
-.terraform/*
 terraform/eks-cluster/.terraform/*
 terraform/eks-cluster/terraform.*
 aws/*

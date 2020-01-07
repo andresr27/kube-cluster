@@ -1,3 +1,5 @@
+.terraform/*
+terraform.tfstate
 terraform.tfvars
 services/password.txt
 terraform/eks-cluster/.terraform/*

@@ -6,13 +6,16 @@ CONSOLE
 # Set up Access to the cluster for tiller
 
 > kubectl apply -f rbac.yaml
-> helm init --service-account tiller
+> helm init --service-account tiller 
 
-Note: Tiller needs to be secure 
+Note: Tiller needs to be secure:
 
 > run `helm init` with the --tiller-tls-verify flag.
 
 https://docs.helm.sh/using_helm/#securing-your-helm-installation
+
+See edit in Method 2 to ingnore insecure installation for the metrics-server deployed.
+
 
 > helm completion bash >> ~/.bash_completion
 > . /etc/profile.d/bash_completion.sh
@@ -29,19 +32,19 @@ https://docs.helm.sh/using_helm/#securing-your-helm-installation
 
 Clean up
 
-> helm list 
+> helm list
 
 > helm delete --purge mywebserver
 
 
 
 
-# DEPLOY MICROSERVICES WITH HELM
+# Deploy Micreservices with Helm
 
 
 > helm create Demo
- 
-> helm install --debug --dry-run --name workshop . 
+
+> helm install --debug --dry-run --name workshop .
 
 > kubectl get pods
 
@@ -93,7 +96,7 @@ Introduce failure
 
 > kubectl get pods -l app=readiness-deployment
 
-Fix 
+Fix
 
 > kubectl exec -it <YOUR-READINESS-POD-NAME> -- touch /tmp/healthy
 
@@ -120,29 +123,29 @@ In a few minutes you should be able to list metrics using the following:
 
 kubectl get --raw "/apis/metrics.k8s.io/v1beta1/nodes"
 
-Verify deployment is running 
+Verify deployment is running
 
 kubectl get deployment metrics-server -n kube-system
-
 
 helm del --purge metrics-server
 
 
->>>> Method 2 
+# Method 2
 
-Reference
+Reference:
+
 https://aws.amazon.com/es/premiumsupport/knowledge-center/eks-metrics-server-pod-autoscaler/
 
 
 
-git clone https://github.com/kubernetes-incubator/metrics-server.git
-cd metrics-server/
+> git clone https://github.com/kubernetes-incubator/metrics-server.git
 
-kubectl create -f deploy/1.8+/
+> cd metrics-server/
+
+> kubectl create -f deploy/1.8+/
 
 
-
-# edit metric-server deployment to add the flags
+# Edit metric-server deployment to add the flags
 
 kubectl edit deploy -n kube-system metrics-server
 
@@ -154,16 +157,15 @@ spec:
     image: k8s.gcr.io/metrics-server-amd64:v0.3.6
 
 
-Deploy metric-server 
+# Deploy metric-server: Delete
 
 
 > kubectl apply -f metrics-server-0.3.6/deploy/1.8+/
 
 
-Verify deployment is running 
+Verify deployment is running
 
 > kubectl get deployment metrics-server -n kube-system
-
 
 
 Confirm the Metrics API is available
@@ -182,25 +184,22 @@ Confirm the Metrics API is available
 
 
 
-Deploy a Sample App 
+# Deploy a Sample App
 
 > kubectl run php-apache --image=k8s.gcr.io/hpa-example --requests=cpu=200m --expose --port=80
 
+# Clean Up
 
 > kubectl delete deployment php-apache
-
-Or specific parts
-
 > kubectl delete svc php-apache
-> kubectl delete pod php-apache
 
 
 
 
 
-Create a HPA resource
-	
-> kubectl get hpa 
+# Create a HPA resource
+
+> kubectl get hpa
 
 !!!! This command returns unknown on target metric -> see method 2 to deploy metrics
 
@@ -210,9 +209,9 @@ Create new container to test:
 
 > kubectl run -i --tty load-generator --image=busybox /bin/sh
 
-Te reattach
+To re-attach
 
-kubectl attach load-generator-7fbcc7489f-nckbd -c load-generator -i -t
+> kubectl attach load-generator-7fbcc7489f-nckbd -c load-generator -i -t
 
 Run the following loop on the container shell
 
@@ -220,5 +219,26 @@ Run the following loop on the container shell
 
 
 
+# Configure the Cluster Autoscaler
+
+Get in from working nodes in EKS and edit it in cluster_autoscaler.yaml
+
+command:
+  - ./cluster-autoscaler
+  - --v=4
+  - --stderrthreshold=info
+  - --cloud-provider=aws
+  - --skip-nodes-with-local-storage=false
+  - --nodes=2:8:<AUTOSCALING GROUP NAME>
 
 
+aws iam put-role-policy --role-name $ROLE_NAME --policy-name ASG-Policy-For-Worker --policy-document file://~/Programs/Terraform/kube-cluster-sample/eksdemo/asg_policy/k8s-asg-policy.json
+
+Validate that the policy is attached to the role
+
+aws iam get-role-policy --role-name $ROLE_NAME --policy-name ASG-Policy-For-Worker
+
+kubectl apply -f cluster-autoscaler/cluster_autoscaler.yml
+
+
+kubectl apply -f cluster-autoscaler/nginx.yaml

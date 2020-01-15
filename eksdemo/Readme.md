@@ -42,7 +42,7 @@ Clean up
 # Deploy Micreservices with Helm
 
 
-> helm create Demo
+> helm create Demokubectl scale --replicas=10 deployment/nginx-to-scaleout
 
 > helm install --debug --dry-run --name workshop .
 
@@ -242,3 +242,46 @@ kubectl apply -f cluster-autoscaler/cluster_autoscaler.yml
 
 
 kubectl apply -f cluster-autoscaler/nginx.yaml
+
+
+From de aws console edit the nodes autoscaling group to allow launch configuration.
+
+
+ISSUES nodes don't scale down after decreasing replica set.
+
+kubectl scale --replicas=10 deployment/nginx-to-scaleout
+
+# Clean Up
+
+
+aws iam delete-role-policy --role-name $ROLE_NAME --policy-name ASG-Policy-For-Worker
+kubectl delete -f cluster-autoscaler/cluster_autoscaler.yml
+kubectl delete -f cluster-autoscaler/nginx.yaml
+kubectl delete hpa,svc php-apache
+kubectl delete deployment php-apache load-generator
+
+
+# RBAC
+
+cat << EoF > aws-auth.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-auth
+  namespace: kube-system
+data:
+  mapUsers: |
+    - userarn: arn:aws:iam::${ACCOUNT_ID}:user/rbac-user
+      username: rbac-user
+EoF
+
+How to get account ID
+
+> aws iam get-user --user-name rbac-user
+
+An error occurred (InvalidClientTokenId) when calling the GetUser operation: The security token included in the request is invalid.
+ 
+
+
+
+

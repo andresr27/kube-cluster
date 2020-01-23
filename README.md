@@ -13,7 +13,7 @@ Edit terraform.tfvars
 
 # Deploy Cluster
 
-> cd examples/examples/eks-getting-started
+> cd terraform/eks-cluster
 
 > sudo terraform apply
 
@@ -31,13 +31,18 @@ You need to have aws-authenticator configured.
 
 # Access Console
 
->kubectl proxy
+
+
+> kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
 
 Get a token to connecto your cluster
 
 > aws eks get-token --cluster-name terraform-eks-demo | jq -r '.status.token'
 
-Go to http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/ and insert the token.
+kubectl proxy --port=8080 --address='0.0.0.0' --disable-filter=true &
+
+
+Go to http://localhost:8080/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/ and insert the token.
 
 # Deploy Services
 
@@ -62,3 +67,5 @@ Check that pods are running without errors
 See info about running services
 
 > kubectl get scv
+
+kubectl get svc wordpress -o jsonpath="{.status.loadBalancer.ingress[*].hostname}"; echo

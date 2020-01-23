@@ -6,8 +6,8 @@
 #  * EKS Cluster
 #
 
-resource "aws_iam_role" "demo-cluster" {
-  name = "terraform-eks-demo-cluster"
+resource "aws_iam_role" "demo" {
+  name = "eks-cluster-demo"
 
   assume_role_policy = <<POLICY
 {
@@ -25,18 +25,18 @@ resource "aws_iam_role" "demo-cluster" {
 POLICY
 }
 
-resource "aws_iam_role_policy_attachment" "demo-cluster-AmazonEKSClusterPolicy" {
+resource "aws_iam_role_policy_attachment" "cluster-demo-AmazonEKSClusterPolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-  role       = aws_iam_role.demo-cluster.name
+  role       = aws_iam_role.demo.name
 }
 
-resource "aws_iam_role_policy_attachment" "demo-cluster-AmazonEKSServicePolicy" {
+resource "aws_iam_role_policy_attachment" "cluster-demo-AmazonEKSServicePolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
-  role       = aws_iam_role.demo-cluster.name
+  role       = aws_iam_role.demo.name
 }
 
-resource "aws_security_group" "demo-cluster" {
-  name        = "terraform-eks-demo-cluster"
+resource "aws_security_group" "cluster-demo" {
+  name        = "eks-cluster-demo"
   description = "Cluster communication with worker nodes"
   vpc_id      = aws_vpc.demo.id
 
@@ -48,41 +48,44 @@ resource "aws_security_group" "demo-cluster" {
   }
 
   tags = {
-    Name = "terraform-eks-demo"
+    Name = "eks-cluster-demo"
   }
 }
 
-# resource "aws_security_group_rule" "demo-cluster-ingress-node-https" {
-#   description              = "Allow pods to communicate with the cluster API Server"
-#   from_port                = 443
-#   protocol                 = "tcp"
-#   security_group_id        = aws_security_group.demo-cluster.id
-#   source_security_group_id = aws_security_group.demo-node.id
-#   to_port                  = 443
-#   type                     = "ingress"
-# }
+resource "aws_security_group_rule" "demo-cluster-ingress-node-https" {
+  description              = "Allow pods to communicate with the cluster API Server"
+  from_port                = 443
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.cluster-demo.id
+  source_security_group_id = aws_security_group.cluster-demo.id
+  to_port                  = 443
+  type                     = "ingress"
+}
 
-resource "aws_security_group_rule" "demo-cluster-ingress-workstation-http" {
+resource "aws_security_group_rule" "demo-cluster-ingress-workstation-https" {
   cidr_blocks       = ["${local.workstation-external-cidr}"]
   description       = "Allow workstation to communicate with the cluster API Server"
   from_port         = 443
   protocol          = "tcp"
-  security_group_id = aws_security_group.demo-cluster.id
+  security_group_id = aws_security_group.cluster-demo.id
   to_port           = 443
   type              = "ingress"
 }
 
 resource "aws_eks_cluster" "demo" {
   name     = var.cluster-name
-  role_arn = aws_iam_role.demo-cluster.arn
+  role_arn = aws_iam_role.demo.arn
 
   vpc_config {
-    security_group_ids = ["${aws_security_group.demo-cluster.id}"]
+    security_group_ids = ["${aws_security_group.cluster-demo.id}"]
     subnet_ids         = aws_subnet.demo[*].id
   }
 
+ # Ensure that IAM Role permissions are created before and deleted after EKS Cluster handling.
+ # Otherwise, EKS will not be able to properly delete EKS managed EC2 infrastructure such as Security Groups.
+
   depends_on = [
-    aws_iam_role_policy_attachment.demo-cluster-AmazonEKSClusterPolicy,
-    aws_iam_role_policy_attachment.demo-cluster-AmazonEKSServicePolicy,
+    aws_iam_role_policy_attachment.cluster-demo-AmazonEKSClusterPolicy,
+    aws_iam_role_policy_attachment.cluster-demo-AmazonEKSServicePolicy,
   ]
 }

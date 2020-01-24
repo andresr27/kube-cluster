@@ -6,9 +6,40 @@
 #  * EKS Cluster
 #
 
-resource "aws_iam_role" "demo" {
-  name = "eks-cluster-demo"
 
+resource "aws_iam_openid_connect_provider" "demo" {
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = []
+  url             = "${aws_eks_cluster.demo.identity.0.oidc.0.issuer}"
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_policy_document" "demo_assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    effect  = "Allow"
+
+    condition {
+      test     = "StringEquals"
+      variable = "${replace(aws_iam_openid_connect_provider.demo.url, "https://", "")}:sub"
+      values   = ["system:serviceaccount:kube-system:aws-node"]
+    }
+
+    principals {
+      identifiers = ["${aws_iam_openid_connect_provider.demo.arn}"]
+      type        = "Federated"
+    }
+  }
+}
+
+#################     IAM ROLES      #####################
+
+# Change the assume_role command to  assume_role_policy = "${data.aws_iam_policy_document.example_assume_role_policy.json}"
+
+resource "aws_iam_role" "demo" {
+  name = "role-cluster-demo"
+  description = "Allows user to create cluster and services with EKS?"
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -34,6 +65,35 @@ resource "aws_iam_role_policy_attachment" "cluster-demo-AmazonEKSServicePolicy" 
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
   role       = aws_iam_role.demo.name
 }
+
+# resource "aws_iam_role" "ksa" {
+#   name = "role-cluster-sa"
+#   description = "Role to allow K8s service account access to AWS resources"
+#
+#   assume_role_policy = <<POLICY
+# {
+#   "Version": "2012-10-17",
+#   "Statement": [
+#     {
+#       "Effect": "Allow",
+#       "Principal": {
+#         "Service": "eks.amazonaws.com"
+#       },
+#       "Action": "sts:AssumeRole"
+#     }
+#   ]
+# }
+# POLICY
+# }
+
+
+
+# resource "aws_iam_role_policy_attachment" "cluster-demo-AmazonS3ReadOnlyAccess" {
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+#   role       = aws_iam_role.ksa.name
+# }
+
+########## SECURITY GROUPS ########
 
 resource "aws_security_group" "cluster-demo" {
   name        = "eks-cluster-demo"
